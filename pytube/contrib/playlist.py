@@ -1,4 +1,5 @@
 """Module to download a complete playlist from a youtube channel."""
+import sys
 import json
 import logging
 from collections.abc import Sequence
@@ -27,6 +28,14 @@ class Playlist(Sequence):
         self._sidebar_info = None
 
         self._playlist_id = None
+
+    def progress_callback(self, stream, chunk, bytes_remaining):
+        # print("Callback triggered!")  # Add this line
+        total_size = stream.filesize
+        bytes_downloaded = total_size - bytes_remaining
+        percentage_of_completion = bytes_downloaded / total_size * 100
+        sys.stdout.write(f"\rDownloaded {percentage_of_completion:.2f}%")
+        sys.stdout.flush()
 
     @property
     def playlist_id(self):
@@ -294,7 +303,7 @@ class Playlist(Sequence):
 
     def videos_generator(self):
         for url in self.video_urls:
-            yield YouTube(url)
+            yield YouTube(url, on_progress_callback = self.progress_callback)
 
     @property
     def videos(self) -> Iterable[YouTube]:
